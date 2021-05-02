@@ -1,0 +1,5 @@
+    @GetMapping
+    @RequestMapping("{{methodUrl}}")
+    public String {{methodName}}() {
+        return {{methodReturn}}
+    }
