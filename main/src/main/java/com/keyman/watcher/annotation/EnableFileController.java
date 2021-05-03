@@ -15,6 +15,6 @@ import java.lang.annotation.Target;
 @ComponentScan(
         basePackageClasses = {Main.class})
 @Import(ComponentScanConfiguration.class)
-public @interface EanbleFileController {
+public @interface EnableFileController {
     boolean enabled() default true;
 }
