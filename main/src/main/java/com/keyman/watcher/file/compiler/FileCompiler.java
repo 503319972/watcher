@@ -1,4 +1,4 @@
-package com.keyman.watcher.file;
+package com.keyman.watcher.file.compiler;
 
 import com.keyman.watcher.exception.CompiledException;
 import com.keyman.watcher.parser.util.FileUtil;
@@ -14,13 +14,14 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Compiler extends ClassLoader
+@Deprecated
+public class FileCompiler extends ClassLoader
 {
-    private static final Logger log = LoggerFactory.getLogger(Compiler.class);
+    private static final Logger log = LoggerFactory.getLogger(FileCompiler.class);
     private static final String CLASS_FILE = FileUtil.loadFile("FileTemplate");
     private static final String METHOD_FILE = FileUtil.loadFile("MethodTemplate");
 
-    public Compiler()
+    public FileCompiler()
     {
         super(ClassLoader.getSystemClassLoader());
     }
