@@ -1,4 +1,4 @@
-package com.keyman.watcher.parser.util;
+package com.keyman.watcher.util;
 
 import org.apache.logging.log4j.util.Strings;
 

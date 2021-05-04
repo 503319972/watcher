@@ -1,8 +1,8 @@
 package com.keyman.watcher.parser;
 
 import com.keyman.watcher.exception.UnknownResultFormatException;
-import com.keyman.watcher.parser.util.JsonUtil;
-import com.keyman.watcher.parser.util.XmlUtil;
+import com.keyman.watcher.util.JsonUtil;
+import com.keyman.watcher.util.XmlUtil;
 
 import java.io.File;
 import java.util.ArrayList;

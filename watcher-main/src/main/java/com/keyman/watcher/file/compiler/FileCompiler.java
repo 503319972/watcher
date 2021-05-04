@@ -1,8 +1,8 @@
 package com.keyman.watcher.file.compiler;
 
 import com.keyman.watcher.exception.CompiledException;
-import com.keyman.watcher.parser.util.FileUtil;
-import com.keyman.watcher.parser.util.StringUtil;
+import com.keyman.watcher.util.FileUtil;
+import com.keyman.watcher.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

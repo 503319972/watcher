@@ -1,4 +1,4 @@
-package com.keyman.watcher.parser.util;
+package com.keyman.watcher.util;
 
 public class StringUtil {
     private StringUtil() {}

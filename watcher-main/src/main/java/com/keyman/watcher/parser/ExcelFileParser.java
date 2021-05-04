@@ -1,9 +1,9 @@
 package com.keyman.watcher.parser;
 
 import com.keyman.watcher.exception.UnknownResultFormatException;
-import com.keyman.watcher.parser.util.DateUtils;
-import com.keyman.watcher.parser.util.JsonUtil;
-import com.keyman.watcher.parser.util.StringUtil;
+import com.keyman.watcher.util.DateUtils;
+import com.keyman.watcher.util.JsonUtil;
+import com.keyman.watcher.util.StringUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;

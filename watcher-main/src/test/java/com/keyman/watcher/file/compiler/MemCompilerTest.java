@@ -12,7 +12,7 @@ public class MemCompilerTest {
     @Test
     public void compileTest() {
         MemCompiler memCompiler = new MemCompiler();
-        Class<?> compiledController = memCompiler.compile(Collections.emptyMap(), "",
+        Class<?> compiledController = memCompiler.compile("",
                 Temp.class, "CompiledController");
         Method[] methods = compiledController.getMethods();
         Assert.assertNotNull(methods);

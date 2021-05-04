@@ -1,4 +1,4 @@
-package com.keyman.watcher.parser.util;
+package com.keyman.watcher.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,7 @@ import java.nio.channels.FileChannel;
 public class FileUtil {
     private static final Logger log = LoggerFactory.getLogger(FileUtil.class);
     private static final Class<FileUtil> clazz = FileUtil.class;
+    private FileUtil () {}
     public static String loadFile(String fileName) {
         try (InputStream fileStream = clazz.getClassLoader().getResourceAsStream(fileName);
              InputStreamReader inputStreamReader = new InputStreamReader(fileStream);

@@ -6,6 +6,7 @@ import com.keyman.watcher.file.compiler.FileCompiler;
 import com.keyman.watcher.file.FilePathHierarchyParser;
 import com.keyman.watcher.file.compiler.MemCompiler;
 import com.keyman.watcher.parser.ResultStore;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -17,20 +18,17 @@ import java.util.Map;
 @ConfigurationProperties(
         prefix = "watcher"
 )
-public class FileMapConfiguration {
+public class FileMapConfiguration implements InitializingBean {
 
-    private boolean complied = false;
     private String filePath;
     private String controllerName;
+    private boolean compacted = false;
 
     @Autowired
     ApplicationContext context;
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
-        if (controllerName != null && !complied) {
-            dynamicCompile();
-        }
     }
 
     public String getFilePath() {
@@ -39,9 +37,14 @@ public class FileMapConfiguration {
 
     public void setControllerName(String controllerName) {
         this.controllerName = controllerName;
-        if (filePath != null && !complied) {
-            dynamicCompile();
-        }
+    }
+
+    public boolean isCompacted() {
+        return compacted;
+    }
+
+    public void setCompacted(boolean compacted) {
+        this.compacted = compacted;
     }
 
     public String getControllerName() {
@@ -50,10 +53,14 @@ public class FileMapConfiguration {
 
     private void dynamicCompile() {
         FilePathHierarchyParser parser = new FilePathHierarchyParser(filePath);
-        Map<String, String> stringStringMap = parser.buildHierarchy();
+        Map<String, ?> stringStringMap = compacted ? parser.buildHierarchy(true) : parser.buildHierarchy();
         ResultStore.setGlobalResult(stringStringMap);
-        Class<?> compileClass = new MemCompiler().compile(stringStringMap, filePath, Temp.class, controllerName);
+        Class<?> compileClass = new MemCompiler().compile(filePath, Temp.class, controllerName);
         ControllerInjectCenter.controlCenter(compileClass, context, 1);
-        complied = true;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        dynamicCompile();
     }
 }

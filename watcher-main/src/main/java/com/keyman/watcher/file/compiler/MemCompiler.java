@@ -1,7 +1,8 @@
 package com.keyman.watcher.file.compiler;
 
-import com.keyman.watcher.parser.util.FileUtil;
-import com.keyman.watcher.parser.util.StringUtil;
+import com.keyman.watcher.parser.ResultStore;
+import com.keyman.watcher.util.FileUtil;
+import com.keyman.watcher.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +25,11 @@ public class MemCompiler extends ClassLoader {
         super(ClassLoader.getSystemClassLoader());
     }
 
-    public Class<?> compile(Map<String, String> input, String apiRootPath, Class<?> rootCLass, String targetClassName)
+    public Class<?> compile(String apiRootPath, Class<?> rootCLass, String targetClassName)
     {
         try {
             String packageName = rootCLass.getPackage().getName();
-            String content = buildController(input, apiRootPath, packageName, targetClassName);
+            String content = buildController(apiRootPath, packageName, targetClassName);
 
             StandardJavaFileManager standardFileManager = COMPILER.getStandardFileManager(null, null, null);
             ControllerFileManager controllerFileManager = new ControllerFileManager(standardFileManager);
@@ -48,14 +49,17 @@ public class MemCompiler extends ClassLoader {
         return null;
     }
 
-    public String buildController(Map<String, String> input, String rootPath, String packageName, String className) {
+    public String buildController(String rootPath, String packageName, String className) {
         StringBuilder builder = new StringBuilder();
         AtomicInteger index = new AtomicInteger(1);
+        Map<String, ?> input = ResultStore.getGlobalResult();
         input.keySet().forEach(k -> {
             String url = k.substring(rootPath.length() + 1, k.lastIndexOf('.')).replaceAll("\\s", "");
             String tempMethod = METHOD_FILE.replace("{{methodUrl}}", url.replace("\\", "/"));
             tempMethod = tempMethod.replace("{{methodName}}", "get" + index.getAndIncrement());
-            String methodReturn = "ResultStore.getGlobalResult()" + ".get(\"" + StringUtil.escapeRegex(k) + "\");";
+            String methodReturn = input.values().stream().findAny().orElse(null) instanceof byte[] ?
+                    "GZIPUtil.decompress((byte[]) ResultStore.getGlobalResult()" + ".get(\"" + StringUtil.escapeRegex(k) + "\"));" :
+                    "ResultStore.getGlobalResult()" + ".get(\"" + StringUtil.escapeRegex(k) + "\");";
             tempMethod = tempMethod.replace("{{methodReturn}}", methodReturn);
             builder.append(tempMethod);
         });

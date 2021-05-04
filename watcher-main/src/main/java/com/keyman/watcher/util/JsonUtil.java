@@ -1,4 +1,4 @@
-package com.keyman.watcher.parser.util;
+package com.keyman.watcher.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

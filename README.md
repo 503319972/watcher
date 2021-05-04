@@ -3,7 +3,7 @@ A watcher watches the file. With this component in the project, it can scan the 
 automatically. Now it can only be run in Springboot.
 
 # Quick start
-## step 1: build this project
+## step 1: build this project and import it to your project
 ```
 mvn install
 ```
