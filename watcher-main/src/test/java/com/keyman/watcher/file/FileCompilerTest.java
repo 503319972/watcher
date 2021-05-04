@@ -3,10 +3,15 @@ package com.keyman.watcher.file;
 import com.keyman.watcher.controller.Temp;
 import com.keyman.watcher.file.compiler.FileCompiler;
 import com.keyman.watcher.parser.ResultStore;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -25,5 +30,13 @@ public class FileCompilerTest {
         Method get1 = aClass.getMethod("get1");
         Object invoke = get1.invoke(obj);
         System.out.println(invoke);
+    }
+
+    @Test
+    public void dateStr() {
+        Date date = new Date();
+        System.out.println(date);
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.ofHours(8));
+        System.out.println(localDateTime.format(DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")));
     }
 }

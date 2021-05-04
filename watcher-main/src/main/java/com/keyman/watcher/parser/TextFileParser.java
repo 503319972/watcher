@@ -88,7 +88,7 @@ public class TextFileParser implements FileJsonParser, FileXmlParser {
             return line.split(separator);
         }
         ArrayList<String> values = new ArrayList<>();
-        if (specialWords.size() > 0 && line != null) {
+        if (!specialWords.isEmpty() && line != null) {
             for (int i = 0; i < specialWords.size(); i++) {
                 String sword = specialWords.get(i);
                 String[] words = line.split(escapeRegex(specialWords.get(i)));
@@ -111,6 +111,7 @@ public class TextFileParser implements FileJsonParser, FileXmlParser {
         switch (resultFormat) {
             case JSON:
             case TXT:
+            case CSV:
                 return parseJson(path);
             case XML:
                 return parseXml(path);

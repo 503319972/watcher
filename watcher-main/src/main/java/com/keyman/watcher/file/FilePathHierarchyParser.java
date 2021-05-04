@@ -51,9 +51,12 @@ public class FilePathHierarchyParser {
         ResultFormat resultFormat = ResultFormat.Of(postfix);
         switch (resultFormat) {
             case JSON:
+            case CSV:
                 return new TextFileParser(JSON);
             case TXT:
                 return new TextFileParser(TXT);
+            case EXCEL:
+
         }
         return null;
     }

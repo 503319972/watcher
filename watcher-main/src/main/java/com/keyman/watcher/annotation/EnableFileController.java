@@ -1,8 +1,6 @@
 package com.keyman.watcher.annotation;
 
-import com.keyman.watcher.Main;
 import com.keyman.watcher.configuration.ComponentScanConfiguration;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -12,8 +10,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@ComponentScan(
-        basePackageClasses = {Main.class})
 @Import(ComponentScanConfiguration.class)
 public @interface EnableFileController {
     boolean enabled() default true;

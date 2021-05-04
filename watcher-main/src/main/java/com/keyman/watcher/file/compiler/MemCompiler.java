@@ -53,7 +53,7 @@ public class MemCompiler extends ClassLoader {
         AtomicInteger index = new AtomicInteger(1);
         input.keySet().forEach(k -> {
             String url = k.substring(rootPath.length() + 1, k.lastIndexOf('.')).replaceAll("\\s", "");
-            String tempMethod = METHOD_FILE.replace("{{methodUrl}}", url);
+            String tempMethod = METHOD_FILE.replace("{{methodUrl}}", url.replace("\\", "/"));
             tempMethod = tempMethod.replace("{{methodName}}", "get" + index.getAndIncrement());
             String methodReturn = "ResultStore.getGlobalResult()" + ".get(\"" + StringUtil.escapeRegex(k) + "\");";
             tempMethod = tempMethod.replace("{{methodReturn}}", methodReturn);

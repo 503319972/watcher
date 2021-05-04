@@ -5,6 +5,9 @@ import java.util.Arrays;
 public enum ResultFormat {
     JSON("json"),
     TXT("txt"),
+    CSV("csv"),
+    EXCEL("xlsx"),
+    EXCEL2("xls"),
     XML("xml");
 
     private final String format;
