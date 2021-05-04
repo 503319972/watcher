@@ -2,7 +2,6 @@ package com.keyman.watcher.configuration;
 
 import com.keyman.watcher.controller.Temp;
 import com.keyman.watcher.file.ControllerInjectCenter;
-import com.keyman.watcher.file.compiler.FileCompiler;
 import com.keyman.watcher.file.FilePathHierarchyParser;
 import com.keyman.watcher.file.compiler.MemCompiler;
 import com.keyman.watcher.parser.ResultStore;
@@ -22,6 +21,7 @@ public class FileMapConfiguration implements InitializingBean {
 
     private String filePath;
     private String controllerName;
+    private boolean listened = false;
     private boolean compacted = false;
 
     @Autowired
@@ -51,16 +51,32 @@ public class FileMapConfiguration implements InitializingBean {
         return controllerName;
     }
 
+    public boolean isListened() {
+        return listened;
+    }
+
+    public void setListened(boolean listened) {
+        this.listened = listened;
+    }
+
     private void dynamicCompile() {
         FilePathHierarchyParser parser = new FilePathHierarchyParser(filePath);
         Map<String, ?> stringStringMap = compacted ? parser.buildHierarchy(true) : parser.buildHierarchy();
         ResultStore.setGlobalResult(stringStringMap);
+        compile(1);
+    }
+
+    public void compile(int type) {
         Class<?> compileClass = new MemCompiler().compile(filePath, Temp.class, controllerName);
-        ControllerInjectCenter.controlCenter(compileClass, context, 1);
+        ControllerInjectCenter.controlCenter(compileClass, context, type);
     }
 
     @Override
     public void afterPropertiesSet() {
         dynamicCompile();
+        if (listened) {
+            FileDirectoryListener listener = new FileDirectoryListener(this, filePath);
+            listener.listen();
+        }
     }
 }

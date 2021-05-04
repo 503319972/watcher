@@ -2,21 +2,19 @@ package com.keyman.watcher.parser;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ResultStore {
-    private static Map<String, ?> resultMap = null;
-
-    public static void setGlobalResult(Map<String, ?> input) {
-        if (resultMap == null) {
-            synchronized (ResultStore.class) {
-                if (resultMap == null) {
-                    resultMap = input;
-                }
-            }
-        }
+    private ResultStore() {
     }
 
-    public static Map<String, ?> getGlobalResult() {
-        return resultMap == null ? new HashMap<>() : resultMap;
+    private static final ConcurrentHashMap<String, Object> resultMap = new ConcurrentHashMap<>();
+
+    public static void setGlobalResult(Map<String, ?> input) {
+        resultMap.putAll(input);
+    }
+
+    public static Map<String, Object> getGlobalResult() {
+        return new HashMap<>(resultMap);
     }
 }

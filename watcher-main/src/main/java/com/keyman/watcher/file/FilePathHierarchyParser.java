@@ -1,5 +1,7 @@
 package com.keyman.watcher.file;
 
+import com.keyman.watcher.exception.UnknownResultFormatException;
+import com.keyman.watcher.parser.ExcelFileParser;
 import com.keyman.watcher.parser.FileResultParser;
 import com.keyman.watcher.parser.ResultFormat;
 import com.keyman.watcher.parser.TextFileParser;
@@ -12,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.keyman.watcher.parser.ResultFormat.EXCEL;
+import static com.keyman.watcher.parser.ResultFormat.EXCEL2;
 import static com.keyman.watcher.parser.ResultFormat.JSON;
 import static com.keyman.watcher.parser.ResultFormat.TXT;
 
@@ -70,9 +74,12 @@ public class FilePathHierarchyParser {
             case TXT:
                 return new TextFileParser(TXT);
             case EXCEL:
-
+                return new ExcelFileParser(EXCEL);
+            case EXCEL2:
+                return new ExcelFileParser(EXCEL2);
+            default:
+                throw new UnknownResultFormatException();
         }
-        return null;
     }
 
 
