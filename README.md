@@ -29,3 +29,11 @@ watcher.controller-name=CompiledController2
 ```
 
 ## step 4: start the Springboot project which imports this module
+
+## step 5: find your interfaces
+for example, your directory is like 
+/usr/local/test.json, 
+/usr/local/test2.json
+/usr/local/new/test2.json
+and your root path is /usr/local,
+then you can find your interface such as http://localhost/file/test, http://localhost/file/test2, http://localhost/file/new/test2
