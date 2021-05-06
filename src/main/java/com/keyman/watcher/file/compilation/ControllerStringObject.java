@@ -1,4 +1,4 @@
-package com.keyman.watcher.file.compiler;
+package com.keyman.watcher.file.compilation;
 
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;

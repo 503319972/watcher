@@ -1,6 +1,6 @@
-package {{package}};
+/*package {{package}};*/
 
-import com.keyman.watcher.parser.ResultStore;
+import com.keyman.watcher.parser.GlobalStore;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;

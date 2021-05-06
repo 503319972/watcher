@@ -3,8 +3,9 @@ package com.keyman.watcher.configuration;
 import com.keyman.watcher.controller.Temp;
 import com.keyman.watcher.file.ControllerInjectCenter;
 import com.keyman.watcher.file.FilePathHierarchyParser;
-import com.keyman.watcher.file.compiler.MemCompiler;
-import com.keyman.watcher.parser.ResultStore;
+import com.keyman.watcher.file.JarHandler;
+import com.keyman.watcher.file.compilation.MemCompiler;
+import com.keyman.watcher.parser.GlobalStore;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -26,6 +27,9 @@ public class FileMapConfiguration implements InitializingBean {
 
     @Autowired
     ApplicationContext context;
+
+    @Autowired
+    private JarHandler jarHandler;
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
@@ -62,17 +66,21 @@ public class FileMapConfiguration implements InitializingBean {
     private void dynamicCompile() {
         FilePathHierarchyParser parser = new FilePathHierarchyParser(filePath);
         Map<String, ?> stringStringMap = compacted ? parser.buildHierarchy(true) : parser.buildHierarchy();
-        ResultStore.setGlobalResult(stringStringMap);
+        GlobalStore.setGlobalResult(stringStringMap);
         compile(1);
     }
 
     public void compile(int type) {
-        Class<?> compileClass = new MemCompiler().compile(filePath, Temp.class, controllerName);
+        Class<?> compileClass = new MemCompiler(jarHandler).compile(filePath, "", controllerName);
         ControllerInjectCenter.controlCenter(compileClass, context, type);
     }
 
     @Override
     public void afterPropertiesSet() {
+        String commandLine = System.getProperty("sun.java.command");
+        if (commandLine.contains("boot=jar")){
+            GlobalStore.setJarBoot();
+        }
         dynamicCompile();
         if (listened) {
             FileDirectoryListener listener = new FileDirectoryListener(this, filePath);

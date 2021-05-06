@@ -1,8 +1,8 @@
 package com.keyman.watcher.file;
 
 import com.keyman.watcher.controller.Temp;
-import com.keyman.watcher.file.compiler.FileCompiler;
-import com.keyman.watcher.parser.ResultStore;
+import com.keyman.watcher.file.compilation.FileCompiler;
+import com.keyman.watcher.parser.GlobalStore;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -21,7 +21,7 @@ public class FileCompilerTest {
         String rootPath = "C:\\Users\\khong\\Desktop\\api\\TS\\New folder\\New folder";
         FilePathHierarchyParser parser = new FilePathHierarchyParser(rootPath);
         Map<String, String> stringStringMap = parser.buildHierarchy();
-        ResultStore.setGlobalResult(stringStringMap);
+        GlobalStore.setGlobalResult(stringStringMap);
         new FileCompiler().compile(stringStringMap, rootPath, Temp.class, "CompiledController");
 
         Class<?> aClass = Class.forName("com.keyman.watcher.controller.CompiledController");

@@ -26,9 +26,16 @@ public class Application {
 ```
 watcher.file-path=C:\\api\\TS\\example
 watcher.controller-name=CompiledController2
+watcher.compacted=true
+watcher.listened=true
 ```
 
 ## step 4: start the Springboot project which imports this module
+if you start application with a jar, you should use a command with the specific argument "boot=jar",
+```
+java -jar your.jar boot=jar
+```
+if start in the IDE, you do not need to add this argument.
 
 ## step 5: find your interfaces
 for example, your directory is like 

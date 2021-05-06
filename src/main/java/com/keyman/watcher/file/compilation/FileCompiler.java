@@ -1,4 +1,4 @@
-package com.keyman.watcher.file.compiler;
+package com.keyman.watcher.file.compilation;
 
 import com.keyman.watcher.exception.CompiledException;
 import com.keyman.watcher.util.FileUtil;

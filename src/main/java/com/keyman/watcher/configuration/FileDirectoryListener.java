@@ -2,7 +2,7 @@ package com.keyman.watcher.configuration;
 
 
 import com.keyman.watcher.file.FilePathHierarchyParser;
-import com.keyman.watcher.parser.ResultStore;
+import com.keyman.watcher.parser.GlobalStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class FileDirectoryListener {
                                  String rootPath) {
         this.rootPath = rootPath;
         this.configuration = configuration;
-        Map<String, ?> globalResult = ResultStore.getGlobalResult();
+        Map<String, ?> globalResult = GlobalStore.getGlobalResult();
         if (globalResult.size() > 0) {
             globalMap = globalResult;
         }
@@ -35,7 +35,7 @@ public class FileDirectoryListener {
         FilePathHierarchyParser hierarchyParser = new FilePathHierarchyParser(rootPath);
         executor.scheduleWithFixedDelay(() -> {
             AtomicBoolean changed = new AtomicBoolean(false);
-            Map<String, Object> globalResult = ResultStore.getGlobalResult();
+            Map<String, Object> globalResult = GlobalStore.getGlobalResult();
             Map<String, ?> fileMap = configuration.isCompacted() ? hierarchyParser.buildHierarchy(true) : hierarchyParser.buildHierarchy();
             Set<String> files = fileMap.keySet();
             Set<String> oldFiles = globalMap.keySet();
@@ -44,7 +44,7 @@ public class FileDirectoryListener {
                 changed.set(true);
             });
             if (changed.get()) {
-                ResultStore.setGlobalResult(globalResult);
+                GlobalStore.setGlobalResult(globalResult);
                 configuration.compile(2);
             }
         }, 0, 5000, TimeUnit.MILLISECONDS);

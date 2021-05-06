@@ -34,7 +34,8 @@ public class ControllerInjectCenter {
             getMappingForMethod.setAccessible(true);
             Method[] methodArr = controllerClass.getMethods();
             for (Method method : methodArr) {
-                if (method.getAnnotation(RequestMapping.class) != null) {
+                RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
+                if (requestMapping != null) {
                     RequestMappingInfo mappingInfo = (RequestMappingInfo) getMappingForMethod.invoke(requestMappingHandlerMapping,
                             method,controllerClass);
                     if(type == 1){
@@ -45,9 +46,9 @@ public class ControllerInjectCenter {
                     }else if(type == 3){
                         unRegisterMapping(requestMappingHandlerMapping, mappingInfo);
                     }
-
                 }
             }
+            log.info("finish register controller: {}", controllerClass.getName());
         } catch (Exception e) {
             log.error("cannot register compiled controller", e);
         }
