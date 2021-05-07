@@ -163,7 +163,7 @@ public class XmlUtil {
         try {
             return XML_MAPPER.readValue(xml, clazz);
         } catch (Exception var3) {
-            LOG.error("Parse xml to bean ERROR, xml: " + xml, var3);
+            LOG.error("Parse xml to bean ERROR, xml: {}", xml, var3);
             return null;
         }
     }
@@ -172,7 +172,7 @@ public class XmlUtil {
         try {
             return XML_MAPPER.writeValueAsString(data);
         } catch (Exception var2) {
-            throw new RuntimeException("Convert to xml ERROR.", var2);
+            throw new UnsupportedOperationException("Convert to xml ERROR.", var2);
         }
     }
 
@@ -187,7 +187,7 @@ public class XmlUtil {
             writer.write(document);
             writer.flush();
         } catch (Exception var5) {
-            throw new RuntimeException("Stringify to xml ERROR.", var5);
+            throw new UnsupportedOperationException("Stringify to xml ERROR.", var5);
         }
 
         return out.toString();

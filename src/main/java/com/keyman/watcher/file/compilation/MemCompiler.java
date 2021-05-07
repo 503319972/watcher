@@ -1,8 +1,7 @@
 package com.keyman.watcher.file.compilation;
 
-import com.keyman.watcher.file.JarHandler;
+import com.keyman.watcher.file.jar.JarHandler;
 import com.keyman.watcher.parser.GlobalStore;
-import com.keyman.watcher.util.FileUtil;
 import com.keyman.watcher.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,26 +15,19 @@ import javax.tools.ToolProvider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MemCompiler {
     private static final Logger log = LoggerFactory.getLogger(MemCompiler.class);
-    private static final String CLASS_FILE = FileUtil.loadFile("FileTemplate");
-    private static final String METHOD_FILE = FileUtil.loadFile("MethodTemplate");
     private final JarHandler jarHandler;
-
 
     public MemCompiler(JarHandler jarHandler) {
         this.jarHandler = jarHandler;
     }
-
-    public Class<?> compile(String apiRootPath, String packageName, String targetClassName)
+    public Class<?> compile(String content, String packageName, String targetClassName)
     {
         try {
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            String content = buildController(apiRootPath, packageName, targetClassName);
             log.info("class content: {}", content);
+            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager standardFileManager = compiler.getStandardFileManager(null, null, null);
             ControllerFileManager controllerFileManager = new ControllerFileManager(standardFileManager);
             ControllerStringObject stringObject = new ControllerStringObject(targetClassName + ".java",
@@ -73,25 +65,6 @@ public class MemCompiler {
             options.add("-classpath");
             options.add(libs);
         }
-    }
-
-    public String buildController(String rootPath, String packageName, String className) {
-        StringBuilder builder = new StringBuilder();
-        AtomicInteger index = new AtomicInteger(1);
-        Map<String, ?> input = GlobalStore.getGlobalResult();
-        input.keySet().forEach(k -> {
-            String url = k.substring(rootPath.length() + 1, k.lastIndexOf('.')).replaceAll("\\s", "");
-            String tempMethod = METHOD_FILE.replace("{{methodUrl}}", url.replace("\\", "/"));
-            tempMethod = tempMethod.replace("{{methodName}}", "get" + index.getAndIncrement());
-            String methodReturn = input.values().stream().findAny().orElse(null) instanceof byte[] ?
-                    "GZIPUtil.decompress((byte[]) GlobalStore.getGlobalResult().get(\"" + StringUtil.escapeRegex(k) + "\"));" :
-                    "GlobalStore.getGlobalResult().get(\"" + StringUtil.escapeRegex(k) + "\");";
-            tempMethod = tempMethod.replace("{{methodReturn}}", methodReturn);
-            builder.append(tempMethod);
-        });
-        String file = CLASS_FILE.replace("{{methods}}", builder.toString()).replace("{{className}}", className);
-        file = file.replace("{{package}}", packageName);
-        return file;
     }
 
     private String compilePrint(Diagnostic<?> diagnostic) {

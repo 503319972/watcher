@@ -1,7 +1,8 @@
 package com.keyman.watcher.file.compilation;
 
 import com.keyman.watcher.controller.Temp;
-import com.keyman.watcher.file.JarHandler;
+import com.keyman.watcher.file.FileTemplate;
+import com.keyman.watcher.file.jar.JarHandler;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,7 +15,8 @@ public class MemCompilerTest {
     @Ignore("ignore maven build")
     public void compileTest() {
         MemCompiler memCompiler = new MemCompiler(new JarHandler());
-        Class<?> compiledController = memCompiler.compile("",
+        String content = FileTemplate.buildController("", Temp.class.getPackage().getName(), "CompiledController");
+        Class<?> compiledController = memCompiler.compile(content,
                 Temp.class.getPackage().getName(), "CompiledController");
         Method[] methods = compiledController.getMethods();
         Assert.assertNotNull(methods);

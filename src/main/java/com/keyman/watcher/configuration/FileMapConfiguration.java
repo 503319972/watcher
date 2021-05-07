@@ -1,9 +1,9 @@
 package com.keyman.watcher.configuration;
 
-import com.keyman.watcher.controller.Temp;
 import com.keyman.watcher.file.ControllerInjectCenter;
 import com.keyman.watcher.file.FilePathHierarchyParser;
-import com.keyman.watcher.file.JarHandler;
+import com.keyman.watcher.file.FileTemplate;
+import com.keyman.watcher.file.jar.JarHandler;
 import com.keyman.watcher.file.compilation.MemCompiler;
 import com.keyman.watcher.parser.GlobalStore;
 import org.springframework.beans.factory.InitializingBean;
@@ -71,7 +71,8 @@ public class FileMapConfiguration implements InitializingBean {
     }
 
     public void compile(int type) {
-        Class<?> compileClass = new MemCompiler(jarHandler).compile(filePath, "", controllerName);
+        String content = FileTemplate.buildController(filePath, "", controllerName);
+        Class<?> compileClass = new MemCompiler(jarHandler).compile(content, "", controllerName);
         ControllerInjectCenter.controlCenter(compileClass, context, type);
     }
 

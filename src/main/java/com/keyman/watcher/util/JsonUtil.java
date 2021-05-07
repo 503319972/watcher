@@ -134,9 +134,8 @@ public class JsonUtil {
             OBJECT_MAPPER.readTree(json);
             return true;
         } catch (IOException e) {
-//            LOGGER.warn(String.format("not a valid json:  %s", json), e);
+            return false;
         }
-        return false;
     }
 
     public static <C> C fromJson(String json, TypeReference<C> typeReference){
@@ -154,7 +153,7 @@ public class JsonUtil {
         } catch (JsonProcessingException e) {
             LOGGER.error("cannot convert object to byte array", e);
         }
-        return null;
+        return new byte[]{};
     }
 
     public static <T> String writeToString(T t){

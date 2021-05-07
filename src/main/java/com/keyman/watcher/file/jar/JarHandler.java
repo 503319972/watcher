@@ -1,4 +1,4 @@
-package com.keyman.watcher.file;
+package com.keyman.watcher.file.jar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +34,12 @@ public class JarHandler {
             String path = url.getFile();
             File file = new File(path);
             String jarPath = file.getParentFile().getPath();
+            log.info("jar path:{}" , jarPath);
             jarPath = jarPath.substring(0, jarPath.lastIndexOf("!" + File.separator + "BOOT-INF"));
-            jarPath = jarPath.replace("file:" + File.separator, "");
+            jarPath = jarPath.replace("file:", "");
+            if (jarPath.startsWith("\\")) {
+                jarPath = jarPath.substring(1);
+            }
             unJarPath = jarPath.replace(".jar", "") + "-" + UUID.randomUUID();
             decompress(jarPath, unJarPath);
         });

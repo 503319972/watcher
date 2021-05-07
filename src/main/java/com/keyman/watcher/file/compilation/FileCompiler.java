@@ -14,11 +14,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@Deprecated
 /**
  * @deprecated this compiler will create a java file then compile it to a class.
  * But it is useless in the jar.
  */
+@Deprecated
 public class FileCompiler extends ClassLoader
 {
     private static final Logger log = LoggerFactory.getLogger(FileCompiler.class);

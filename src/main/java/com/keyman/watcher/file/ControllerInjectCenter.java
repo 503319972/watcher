@@ -46,6 +46,7 @@ public class ControllerInjectCenter {
                     }else if(type == 3){
                         unRegisterMapping(requestMappingHandlerMapping, mappingInfo);
                     }
+                    log.debug("load method: {}", method.getName());
                 }
             }
             log.info("finish register controller: {}", controllerClass.getName());
