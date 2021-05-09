@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<property name="COMMON_PATTERN"
+		value="%d %-5p class=%logger{36} thread=%thread event_description=&quot;%m&quot;%n" />
+	<!-- console -->
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>${COMMON_PATTERN}</pattern>
+		</encoder>
+	</appender>
+	<!-- rolling file log -->
+
+	<appender name="netty" class="ch.qos.logback.classic.AsyncAppender">
+		<queueSize>1024</queueSize>
+		<discardingThreshold>0</discardingThreshold>
+		<maxFlushTime>5000</maxFlushTime>
+		<appender-ref ref="console" />
+	</appender>
+	<logger name="org.apache.kafka" additivity="false" level="INFO">
+		<appender-ref ref="netty" />
+	</logger>
+
+	<root level="INFO">
+		<appender-ref ref="console" />
+	</root>
+	<!-- this will ensure that the async logging queues are emptied before shutdown -->
+	<shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook" />
+</configuration>
