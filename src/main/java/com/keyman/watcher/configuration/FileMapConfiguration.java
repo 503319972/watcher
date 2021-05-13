@@ -5,6 +5,10 @@ import com.keyman.watcher.file.FilePathHierarchyParser;
 import com.keyman.watcher.file.FileTemplate;
 import com.keyman.watcher.file.jar.JarHandler;
 import com.keyman.watcher.file.compilation.MemCompiler;
+import com.keyman.watcher.netty.ConnectCenter;
+import com.keyman.watcher.netty.strategy.LeaderCopyStrategy;
+import com.keyman.watcher.netty.strategy.StarCopyStrategy;
+import com.keyman.watcher.netty.strategy.Strategy;
 import com.keyman.watcher.parser.GlobalStore;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +16,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @ConfigurationProperties(
@@ -24,6 +30,9 @@ public class FileMapConfiguration implements InitializingBean {
     private String controllerName;
     private boolean listened = false;
     private boolean compacted = false;
+    private List<String> hosts;
+    private boolean clusterCopy = false;
+    private ClusterStrategy clusterStrategy;
 
     @Autowired
     ApplicationContext context;
@@ -63,17 +72,52 @@ public class FileMapConfiguration implements InitializingBean {
         this.listened = listened;
     }
 
+    public List<String> getHosts() {
+        return hosts;
+    }
+
+    public void setHosts(List<String> hosts) {
+        this.hosts = hosts;
+    }
+
+    public ClusterStrategy getClusterStrategy() {
+        return clusterStrategy;
+    }
+
+    public void setClusterStrategy(ClusterStrategy clusterStrategy) {
+        this.clusterStrategy = clusterStrategy;
+    }
+
+    public boolean isClusterCopy() {
+        return clusterCopy;
+    }
+
+    public void setClusterCopy(boolean clusterCopy) {
+        this.clusterCopy = clusterCopy;
+    }
+
+    // init
     private void dynamicCompile() {
         FilePathHierarchyParser parser = new FilePathHierarchyParser(filePath);
         Map<String, ?> stringStringMap = compacted ? parser.buildHierarchy(true) : parser.buildHierarchy();
-        GlobalStore.setGlobalResult(stringStringMap);
+        GlobalStore.putGlobalResult(stringStringMap);
         compile(1);
+        if (!hosts.isEmpty() && clusterCopy) {
+            startNetty();
+        }
     }
 
     public void compile(int type) {
         String content = FileTemplate.buildController(filePath, "", controllerName);
         Class<?> compileClass = new MemCompiler(jarHandler).compile(content, "", controllerName);
         ControllerInjectCenter.controlCenter(compileClass, context, type);
+    }
+
+    private void startNetty() {
+        Strategy strategy = Optional.ofNullable(getClusterStrategy()).map(c -> c.strategy).orElse(new StarCopyStrategy());
+        ConnectCenter connectCenter = ConnectCenter.getInstance(strategy);
+        connectCenter.startServer();
+        connectCenter.startClient(getHosts());
     }
 
     @Override
@@ -85,7 +129,42 @@ public class FileMapConfiguration implements InitializingBean {
         dynamicCompile();
         if (listened) {
             FileDirectoryListener listener = new FileDirectoryListener(this, filePath);
-            listener.listen();
+            listener.listen(clusterCopy);
+        }
+    }
+
+    public class ClusterStrategy {
+        private boolean enableStarCopy = false;
+        private boolean enableLeaderCopy = false;
+        private Strategy strategy;
+
+        public boolean isEnableStarCopy() {
+            return enableStarCopy;
+        }
+
+        public void setEnableStarCopy(boolean enableStarCopy) {
+            this.enableStarCopy = enableStarCopy;
+            if (enableStarCopy) {
+                strategy = new StarCopyStrategy();
+            }
+        }
+
+        public boolean isEnableLeaderCopy() {
+            return enableLeaderCopy;
+        }
+
+        public void setEnableLeaderCopy(boolean enableLeaderCopy) {
+            this.enableLeaderCopy = enableLeaderCopy;
+            if (enableLeaderCopy) {
+                strategy = new LeaderCopyStrategy();
+            }
+        }
+
+        public Strategy getStrategy() {
+            if (strategy == null) {
+                return new StarCopyStrategy();
+            }
+            return strategy;
         }
     }
 }

@@ -2,18 +2,18 @@ package com.keyman.watcher.netty;
 
 import com.keyman.watcher.netty.client.Client;
 import com.keyman.watcher.netty.server.Server;
-import io.netty.channel.ChannelHandlerContext;
-import org.springframework.stereotype.Component;
+import com.keyman.watcher.netty.strategy.Strategy;
+import com.keyman.watcher.parser.GlobalStore;
 
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-@Component
 public class ConnectCenter {
     private final ThreadPoolExecutor pool;
+    private Strategy strategy;
     private Server server;
     private Client client;
 
@@ -21,19 +21,19 @@ public class ConnectCenter {
         return client;
     }
 
-    public ConnectCenter() {
+    private ConnectCenter() {
         this.pool = new ThreadPoolExecutor(4, 4, 10000, TimeUnit.MILLISECONDS,
             new ArrayBlockingQueue<>(2));
     }
 
-    public void startServer(BiConsumer<ChannelHandlerContext, Object> react){
-        server = new Server(new NettyConfig(), react);
+    public void startServer(){
+        server = new Server(new NettyConfig(), strategy.getServerHandler());
         pool.execute(server::start);
     }
 
-    public void startClient(Consumer<Object> handler){
-        client = new Client();
-        client.setHandler(handler);
+    public void startClient(List<String> hosts){
+        client = new Client(hosts);
+        client.setHandler(strategy.getClientHandler());
         pool.execute(client::start);
     }
 
@@ -47,5 +47,26 @@ public class ConnectCenter {
 
     public void closeAServer() {
         pool.execute(server::close);
+    }
+
+    public void distributeCopy() {
+        strategy.distribute(client, GlobalStore.getLatestMoreMapForByte());
+    }
+
+    private static class Holder {
+        private static final ConnectCenter CENTER = new ConnectCenter();
+    }
+
+    public static ConnectCenter getInstance(Strategy strategy)
+    {
+        if (Holder.CENTER.strategy == null) {
+            Holder.CENTER.strategy = strategy;
+        }
+        return Holder.CENTER;
+    }
+
+    public static ConnectCenter getInstance()
+    {
+        return Holder.CENTER;
     }
 }

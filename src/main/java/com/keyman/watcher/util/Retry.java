@@ -93,7 +93,8 @@ public class Retry {
         }
         void tryAgain(long period, TimeUnit timeUnit) {
             long l = Optional.ofNullable(timeUnit).map(t -> t.toMillis(period)).orElse(period);
-            while (System.currentTimeMillis() < l + period) {}
+            long time = System.currentTimeMillis();
+            while (System.currentTimeMillis() < l + time) {}
             if (times.get() <= retryTimes)
                 times.incrementAndGet();
         }

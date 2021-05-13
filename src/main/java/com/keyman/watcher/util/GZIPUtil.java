@@ -15,14 +15,18 @@ public class GZIPUtil {
     private GZIPUtil() { }
     private static final Charset ENCODING  = StandardCharsets.UTF_8;
     public static byte[] compress(String str) {
+        return compress(str.getBytes(ENCODING));
+    }
+
+    public static byte[] compress(byte[] data) {
         try (ByteArrayOutputStream baOS = new ByteArrayOutputStream()) {
             GZIPOutputStream gzipOS = new GZIPOutputStream(baOS);
-            gzipOS.write(str.getBytes(ENCODING));
+            gzipOS.write(data);
             gzipOS.close();
             return baOS.toByteArray();
         } catch (Exception ex) {
             log.error("compress fail, return origin byte array.", ex);
-            return str.getBytes();
+            return data;
         }
     }
 
@@ -41,5 +45,22 @@ public class GZIPUtil {
             log.error("decompress fail", ex);
         }
         return null;
+    }
+
+    public static byte[] decompressToByte(byte[] bytes) {
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            GZIPInputStream gzipIS = new GZIPInputStream(byteArrayInputStream);
+            byte[] buffer = new byte[1024];
+            int n;
+            while ((n = gzipIS.read(buffer)) >= 0) {
+                out.write(buffer, 0, n);
+            }
+            gzipIS.close();
+            return out.toByteArray();
+        } catch (Exception ex) {
+            log.error("decompress fail", ex);
+        }
+        return new byte[]{};
     }
 }

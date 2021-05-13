@@ -20,7 +20,7 @@ public class FileTemplate {
     public static String buildController(String rootPath, String packageName, String className) {
         StringBuilder builder = new StringBuilder();
         AtomicInteger index = new AtomicInteger(1);
-        Map<String, ?> input = GlobalStore.getGlobalResult();
+        Map<String, ?> input = GlobalStore.getGlobalResultCopy();
         log.debug("root path: {}", rootPath);
         if (rootPath.endsWith("/") || rootPath.endsWith("\\")) {
             rootPath = rootPath.substring(0, rootPath.length() - 1);

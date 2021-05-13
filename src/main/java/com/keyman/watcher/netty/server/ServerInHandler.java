@@ -29,22 +29,6 @@ class ServerInHandler extends ChannelInboundHandlerAdapter {
         this.react = react;
     }
 
-    public BiConsumer<ChannelHandlerContext, Object> getBiReact() {
-        return biReact;
-    }
-
-    public void setBiReact(BiConsumer<ChannelHandlerContext, Object> biReact) {
-        this.biReact = biReact;
-    }
-
-    ServerInHandler() {
-        this((BiConsumer<ChannelHandlerContext, Object>)null);
-    }
-
-    ServerInHandler(Consumer<ChannelHandlerContext> react) {
-        this.react = react;
-    }
-
     ServerInHandler(BiConsumer<ChannelHandlerContext, Object> biReact) {
         this.biReact = biReact;
     }
@@ -75,24 +59,8 @@ class ServerInHandler extends ChannelInboundHandlerAdapter {
         if (reactP) {
             react.accept(ctx);
         }
-        if (biReactP) {
+        else if (biReactP) {
             biReact.accept(ctx, msg);
         }
-        else if (!reactP) {
-            ctx.writeAndFlush("none handler");
-        }
     }
-
-//    @Override
-//    protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception { // (4)
-//        Channel incoming = ctx.channel();
-//        for (Channel channel : channels) {//遍历ChannelGroup中的channel
-//            if (channel != incoming){//找到加入到ChannelGroup中的channel后，将录入的信息回写给除去发送信息的客户端
-//                channel.writeAndFlush("[" + incoming.remoteAddress() + "]" + s + "\n");
-//            }
-//            else {
-//                channel.writeAndFlush("[you]" + s + "\n");
-//            }
-//        }
-//    }
 }

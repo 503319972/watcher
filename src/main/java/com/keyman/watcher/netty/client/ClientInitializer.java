@@ -1,5 +1,6 @@
 package com.keyman.watcher.netty.client;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -10,6 +11,7 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ClientInitializer extends ChannelInitializer<SocketChannel> {
@@ -28,8 +30,8 @@ public class ClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(clientInHandler);
     }
 
-    public void setDataHandler(Consumer<Object> handler) {
-        clientInHandler.setDataHandler(handler);
+    public void setDataHandler(BiConsumer<ChannelHandlerContext,Object> dataHandler) {
+        clientInHandler.setDataHandler(dataHandler);
     }
 
     public void setServerDownHandler(Consumer<Void> handler) {

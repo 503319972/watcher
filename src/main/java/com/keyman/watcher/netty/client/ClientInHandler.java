@@ -1,6 +1,8 @@
 package com.keyman.watcher.netty.client;
 
 
+import com.keyman.watcher.netty.ConnectCenter;
+import com.keyman.watcher.parser.GlobalStore;
 import com.keyman.watcher.util.Retry;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,15 +15,16 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Sharable
 public class ClientInHandler extends ChannelInboundHandlerAdapter {
     private static final Logger log = LoggerFactory.getLogger(ClientInHandler.class);
-    private Consumer<Object> dataHandler;
+    private BiConsumer<ChannelHandlerContext, Object> dataHandler;
     private Consumer<Void> serverDownHandler;
 
-    public void setDataHandler(Consumer<Object> dataHandler) {
+    public void setDataHandler(BiConsumer<ChannelHandlerContext,Object> dataHandler) {
         this.dataHandler = dataHandler;
     }
 
@@ -31,7 +34,7 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Optional.ofNullable(dataHandler).ifPresent(handler -> handler.accept(msg));
+        Optional.ofNullable(dataHandler).ifPresent(handler -> handler.accept(ctx, msg));
     }
 
     @Override
@@ -44,13 +47,9 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-
-            if (event.state().equals(IdleState.READER_IDLE)) { // long time not receive
-//                log.warn("long time no receive");
-            } else if (event.state().equals(IdleState.WRITER_IDLE)) { // send a patch to server every single time
-                ctx.writeAndFlush("ping");
-            } else if (event.state().equals(IdleState.ALL_IDLE)) { // not above situation
-                log.error("unknown idle state");
+            if (event.state().equals(IdleState.READER_IDLE) && GlobalStore.getLatestMoreMapSent()) { // long time not receive
+                ctx.writeAndFlush(GlobalStore.getLatestMoreMapForByte());
+                log.info("no receive message after sending copy data, resend the copy data");
             }
         }
         super.userEventTriggered(ctx,evt);
@@ -70,11 +69,9 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
             log.error("cannot ping outside: {}", clientIP);
         }
         if (netStatus) {
-            Client client = new Client(clientIP);
-            Retry.retrySync(() -> client.start(true), 3, 2000);
-            if (!client.isStart()) {
-                Optional.ofNullable(serverDownHandler).ifPresent(t -> t.accept(null));
-            }
+            ConnectCenter center = ConnectCenter.getInstance();
+            Client client = center.getClient();
+            Retry.retrySync(() -> client.reconnect(ctx.channel()), 3, 2000);
         }
     }
 

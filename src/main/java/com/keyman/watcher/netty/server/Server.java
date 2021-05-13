@@ -49,10 +49,6 @@ public class Server {
     };
     private volatile boolean start = false;
 
-    public Server(NettyConfig nettyConfig) {
-        this.port = nettyConfig.getPort();
-        this.channelHandler = new ServerInHandler();
-    }
 
     public Server(NettyConfig nettyConfig, BiConsumer<ChannelHandlerContext, Object> react) {
         this.port = nettyConfig.getPort();
@@ -61,10 +57,6 @@ public class Server {
 
     public void setReact(Consumer<ChannelHandlerContext> react) {
         channelHandler.setReact(react);
-    }
-
-    public void setBiReact(BiConsumer<ChannelHandlerContext, Object> biReact) {
-        channelHandler.setBiReact(biReact);
     }
 
     public void toClose() {

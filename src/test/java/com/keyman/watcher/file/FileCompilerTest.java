@@ -21,7 +21,7 @@ public class FileCompilerTest {
         String rootPath = "C:\\Users\\khong\\Desktop\\api\\TS\\New folder\\New folder";
         FilePathHierarchyParser parser = new FilePathHierarchyParser(rootPath);
         Map<String, String> stringStringMap = parser.buildHierarchy();
-        GlobalStore.setGlobalResult(stringStringMap);
+        GlobalStore.putGlobalResult(stringStringMap);
         new FileCompiler().compile(stringStringMap, rootPath, Temp.class, "CompiledController");
 
         Class<?> aClass = Class.forName("com.keyman.watcher.controller.CompiledController");
