@@ -4,8 +4,10 @@ import com.keyman.watcher.netty.client.Client;
 import com.keyman.watcher.netty.server.Server;
 import com.keyman.watcher.netty.strategy.Strategy;
 import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.util.Retry;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -27,13 +29,18 @@ public class ConnectCenter {
     }
 
     public void startServer(){
-        server = new Server(new NettyConfig(), strategy.getServerHandler());
-        pool.execute(server::start);
+        startServer(new NettyConfig());
+    }
+
+    public void startServer(NettyConfig nettyConfig){
+        server = new Server(nettyConfig,
+                Optional.ofNullable(strategy).map(Strategy::getServerHandler).orElse(null));
+        pool.execute(() -> Retry.retrySyncInfinitely(server::start));
     }
 
     public void startClient(List<String> hosts){
         client = new Client(hosts);
-        client.setHandler(strategy.getClientHandler());
+        Optional.ofNullable(strategy).ifPresent(s -> client.setHandler(s.getClientHandler()));
         pool.execute(client::start);
     }
 

@@ -7,6 +7,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.bytes.ByteArrayDecoder;
+import io.netty.handler.codec.bytes.ByteArrayEncoder;
+import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 
@@ -25,8 +27,8 @@ public class ClientInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0,
                 2, 0, 2)); // in
         pipeline.addLast(new LengthFieldPrepender(2)); // out
-        pipeline.addLast(new StringEncoder()); // out
-        pipeline.addLast(new ByteArrayDecoder()); // in
+        pipeline.addLast(new ByteArrayEncoder()); // out
+        pipeline.addLast(new StringDecoder()); // in
         pipeline.addLast(clientInHandler);
     }
 

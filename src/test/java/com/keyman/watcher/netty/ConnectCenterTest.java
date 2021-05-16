@@ -1,31 +1,27 @@
 package com.keyman.watcher.netty;
 
+
 import com.keyman.watcher.netty.client.Client;
+import com.keyman.watcher.netty.strategy.StarCopyStrategy;
+import com.keyman.watcher.parser.GlobalStore;
 import com.keyman.watcher.util.Retry;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 public class ConnectCenterTest {
     @Test
     public void test() {
-//        ConnectCenter center = new ConnectCenter();
-//        center.startServer((ctx, obj) -> {
-//                ctx.writeAndFlush("pong".getBytes());
-//            System.out.println(obj);
-//        });
-//        while (true) {}
+        ConnectCenter center = ConnectCenter.getInstance(new TestStrategy());
+        center.startServer();
+        while (true) {}
     }
 
     @Test
@@ -78,19 +74,48 @@ public class ConnectCenterTest {
 
     @Test
     public void retry() {
-        Client client = new Client("123.33.22.11");
-        client.start(true);
+        List<String> hosts = Collections.singletonList("127.0.0.1");
+        Client client = new Client(hosts);
         Retry.retrySync(() -> {
-            client.sendMsg(client.getConnectedChannels().get(0), "msg".getBytes());
-        }, 3, 2000);
+            client.start(true);
+            client.sendMsg(hosts.get(0), "msg".getBytes());
+        }, 5, 5000);
     }
 
     @Test
     public void multipleClient() throws InterruptedException {
         Client client = new Client(Arrays.asList("127.0.0.1", "127.0.0.1", "127.0.0.1"));
         client.start();
-        List<Channel> channels = client.getConnectedChannels();
+        List<String> channels = client.getConnectedChannels();
         Thread.sleep(5000);
         client.sendMsg(channels.get(0), "test1".getBytes());
+    }
+
+    @Test
+    public void server1() {
+        ConnectCenter center = ConnectCenter.getInstance(new StarCopyStrategy());
+        center.startServer(new NettyConfig(56661));
+        while (true) {}
+    }
+
+    @Test
+    public void server2() {
+        ConnectCenter center = ConnectCenter.getInstance(new StarCopyStrategy());
+        center.startServer(new NettyConfig(56662));
+        while (true) {}
+    }
+
+    private static final ConnectCenter CLIENT_CENTER = ConnectCenter.getInstance(new StarCopyStrategy());
+
+    @Test
+    public void clients() throws InterruptedException {
+        CLIENT_CENTER.startClient(Arrays.asList("127.0.0.1:56661", "127.0.0.1:56662"));
+        Thread.sleep(5000);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("1", "23");
+        map.put("2", "4");
+        GlobalStore.setLatestMap(map);
+        CLIENT_CENTER.distributeCopy();
+        while (true) {}
     }
 }

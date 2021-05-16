@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,8 +103,11 @@ public class FileMapConfiguration implements InitializingBean {
         FilePathHierarchyParser parser = new FilePathHierarchyParser(filePath);
         Map<String, ?> stringStringMap = compacted ? parser.buildHierarchy(true) : parser.buildHierarchy();
         GlobalStore.putGlobalResult(stringStringMap);
+        Map<String, Object> moreMap = Collections.unmodifiableMap(stringStringMap);
+        boolean isCluster = !CollectionUtils.isEmpty(hosts) && hosts.size() > 1 && clusterCopy;
         compile(1);
-        if (!hosts.isEmpty() && clusterCopy) {
+        if (isCluster) {
+            GlobalStore.setLatestMap(moreMap);
             startNetty();
         }
     }
@@ -128,12 +133,12 @@ public class FileMapConfiguration implements InitializingBean {
         }
         dynamicCompile();
         if (listened) {
-            FileDirectoryListener listener = new FileDirectoryListener(this, filePath);
-            listener.listen(clusterCopy);
+            FileDirectoryListener listener = new FileDirectoryListener(this, filePath, clusterCopy);
+            listener.listen();
         }
     }
 
-    public class ClusterStrategy {
+    public static class ClusterStrategy {
         private boolean enableStarCopy = false;
         private boolean enableLeaderCopy = false;
         private Strategy strategy;

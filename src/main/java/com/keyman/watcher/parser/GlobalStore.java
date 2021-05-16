@@ -14,7 +14,7 @@ public class GlobalStore {
     }
 
     private static final ConcurrentHashMap<String, Object> resultMap = new ConcurrentHashMap<>();
-    private static ObjectHolder<Map<String, Object>, Boolean> LATEST_MORE_MAP = ObjectHolder.of(null, true);
+    private static final ObjectHolder<Map<String, Object>, Boolean> LATEST_MAP = ObjectHolder.of(null, true);
     private static boolean jarBoot = false;
     private static final LRUQueue<Long> UPDATE_TIME_SERIES = new LRUQueue<>(10);
 
@@ -22,33 +22,45 @@ public class GlobalStore {
     public static void putGlobalResult(Map<String, ?> input) {
         if (input != null && input.size() > 0) {
             resultMap.putAll(input);
-            Retry.retryAsync(GlobalStore::putTimeFlag);
+            Retry.tryAsync(GlobalStore::putTimeFlag);
         }
     }
 
-    public static void setLatestMoreMap(Map<String, Object> input) {
+    public static void setLatestMap(Map<String, Object> input) {
+        setLatestMap(input, false);
+    }
+
+    public static void setLatestMap(Map<String, Object> input, boolean async) {
         if (input != null && input.size() > 0) {
-            while (Boolean.FALSE.equals(LATEST_MORE_MAP.getRight())) { }
-            LATEST_MORE_MAP.putLeft(input);
-            LATEST_MORE_MAP.putRight(false);
-            Retry.retryAsync(GlobalStore::putTimeFlag);
+            if (async) {
+                Retry.tryAsync(() -> addLatestMap(input));
+            } else {
+                addLatestMap(input);
+            }
         }
+    }
+
+    private static void addLatestMap(Map<String, Object> input) {
+        while (Boolean.FALSE.equals(LATEST_MAP.getRight())) { }
+        LATEST_MAP.putLeft(input);
+        LATEST_MAP.putRight(false);
+        putTimeFlag();
     }
 
     public static void setLatestMoreMapSent() {
-        LATEST_MORE_MAP.putRight(true);
+        LATEST_MAP.putRight(true);
     }
 
     public static boolean getLatestMoreMapSent() {
-        return LATEST_MORE_MAP.getRight();
+        return LATEST_MAP.getRight() && LATEST_MAP.getLeft() != null && LATEST_MAP.getLeft().size() > 0;
     }
 
-    public static Map<String, Object> getLatestMoreMap() {
-        return LATEST_MORE_MAP.getLeft();
+    public static Map<String, Object> getLatestMap() {
+        return LATEST_MAP.getLeft();
     }
 
     public static byte[] getLatestMoreMapForByte() {
-        return GZIPUtil.compress(JsonUtil.writeToByte(LATEST_MORE_MAP.getLeft()));
+        return GZIPUtil.compress(JsonUtil.writeToByte(LATEST_MAP.getLeft()));
     }
 
     private static void putTimeFlag() {

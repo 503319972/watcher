@@ -21,20 +21,24 @@ public class FileDirectoryListener {
     private final String rootPath;
     private final ScheduledExecutorService executor;
     private final FileMapConfiguration configuration;
+    private final boolean clusterCopy;
 
     public FileDirectoryListener(FileMapConfiguration configuration,
-                                 String rootPath) {
+                                 String rootPath,
+                                 boolean clusterCopy) {
         this.rootPath = rootPath;
         this.configuration = configuration;
-        executor = new ScheduledThreadPoolExecutor(2);
+        this.executor = new ScheduledThreadPoolExecutor(2);
+        this.clusterCopy = clusterCopy;
     }
 
-    public void listen(boolean clusterCopy) {
+    public void listen() {
         FilePathHierarchyParser hierarchyParser = new FilePathHierarchyParser(rootPath);
         executor.scheduleWithFixedDelay(() -> {
             AtomicBoolean changed = new AtomicBoolean(false);
             Map<String, Object> globalResult = GlobalStore.getGlobalResultCopy();
-            Map<String, ?> fileMap = configuration.isCompacted() ? hierarchyParser.buildHierarchy(true) : hierarchyParser.buildHierarchy();
+            Map<String, ?> fileMap = configuration.isCompacted() ?
+                    hierarchyParser.buildHierarchy(true) : hierarchyParser.buildHierarchy();
             Set<String> files = fileMap.keySet();
             Set<String> oldFiles = globalResult.keySet();
             HashMap<String, Object> newMap = new HashMap<>();
@@ -44,9 +48,9 @@ public class FileDirectoryListener {
             });
             if (changed.get()) {
                 GlobalStore.putGlobalResult(newMap);
-                GlobalStore.setLatestMoreMap(newMap);
                 //configuration.compile(2); //need to compile after a while
                 if (clusterCopy) {
+                    GlobalStore.setLatestMap(newMap);
                     ConnectCenter center = ConnectCenter.getInstance();
                     center.distributeCopy();
                     GlobalStore.setLatestMoreMapSent();

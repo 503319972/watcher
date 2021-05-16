@@ -20,7 +20,7 @@ public class StarCopyStrategy implements Strategy {
 
     @Override
     public void distribute(Client client, byte[] msg) {
-        List<Channel> channels = client.getConnectedChannels();
+        List<String> channels = client.getConnectedChannels();
         channels.forEach(channel -> client.sendMsg(channel, msg));
     }
 

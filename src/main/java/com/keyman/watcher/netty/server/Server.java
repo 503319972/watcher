@@ -13,8 +13,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.bytes.ByteArrayDecoder;
 import io.netty.handler.codec.bytes.ByteArrayEncoder;
 import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
@@ -32,8 +34,8 @@ public class Server {
     private final ServerInHandler channelHandler;
     private final Integer port;
     private final LengthFieldPrepender lengthFieldPrepender = new LengthFieldPrepender(2);
-    private final StringDecoder stringDecoder = new StringDecoder();
-    private final ByteArrayEncoder byteArrayEncoder = new ByteArrayEncoder();
+    private final StringEncoder stringEncoder = new StringEncoder();
+    private final ByteArrayDecoder byteArrayDecoder = new ByteArrayDecoder();
 
     private final ChannelInitializer<SocketChannel> channelInitializer = new ChannelInitializer<SocketChannel>() {
         @Override
@@ -42,8 +44,8 @@ public class Server {
             pipeline.addLast(new LengthFieldBasedFrameDecoder(NettyConfig.getMaxFrameLength()
                     , 0, 2, 0, 2));
             pipeline.addLast(lengthFieldPrepender);
-            pipeline.addLast(stringDecoder);
-            pipeline.addLast(byteArrayEncoder);
+            pipeline.addLast(stringEncoder);
+            pipeline.addLast(byteArrayDecoder);
             pipeline.addLast(channelHandler);
         }
     };

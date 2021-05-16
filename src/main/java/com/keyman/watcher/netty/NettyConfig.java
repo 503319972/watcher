@@ -20,6 +20,10 @@ public class NettyConfig {
     public NettyConfig() {
     }
 
+    public NettyConfig(Integer port) {
+        this.port = port;
+    }
+
     public NettyConfig(List<String> hosts) {
         this.hosts = hosts;
     }

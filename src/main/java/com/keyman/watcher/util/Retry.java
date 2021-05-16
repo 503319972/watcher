@@ -26,6 +26,10 @@ public class Retry {
         retrySync(handler, retry, period, TimeUnit.MILLISECONDS);
     }
 
+    public static void retrySyncInfinitely(RetryFunction handler) {
+        retrySync(handler, Integer.MAX_VALUE, 3000, TimeUnit.MILLISECONDS);
+    }
+
     public static void retrySync(RetryFunction handler, int retry, long period, TimeUnit timeUnit) {
         TimeHolder timeHolder = new TimeHolder(retry);
         int index = 1;
@@ -62,6 +66,9 @@ public class Retry {
         return new Retry(timeHolder);
     }
 
+    public static Retry tryAsync(RetryFunction handler) {
+        return retryAsync(handler, 1);
+    }
 
     public static Retry retryAsync(RetryFunction handler) {
         return retryAsync(handler, 3, 0, null);
@@ -108,7 +115,8 @@ public class Retry {
         }
 
         public void waitForFinish() {
-            LockSupport.park();
+            if (!isFinish())
+                LockSupport.park();
         }
     }
 }

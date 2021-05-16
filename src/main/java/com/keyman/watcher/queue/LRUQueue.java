@@ -9,7 +9,6 @@ public class LRUQueue<K> {
     private static final float LOAD_FACTOR = 0.75f;
     private final LinkedHashMap<K, Object> map;
     public LRUQueue(int cacheSize) {
-        //根据cacheSize和加载因子计算hashmap的capactiy，+1确保当达到cacheSize上限时不会触发hashmap的扩容，
         int capacity = (int) Math.ceil(cacheSize / LOAD_FACTOR) + 1;
         map = new LinkedHashMap<K, Object>(capacity, LOAD_FACTOR, true) {
             @Override

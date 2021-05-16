@@ -71,7 +71,7 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
         if (netStatus) {
             ConnectCenter center = ConnectCenter.getInstance();
             Client client = center.getClient();
-            Retry.retrySync(() -> client.reconnect(ctx.channel()), 3, 2000);
+            Retry.retrySync(() -> client.reconnect(clientIP), 3, 2000);
         }
     }
 

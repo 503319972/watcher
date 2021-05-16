@@ -8,4 +8,8 @@ public class NettyException extends RuntimeException {
     public NettyException() {
         super("unexpected netty error");
     }
+
+    public NettyException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
 }
