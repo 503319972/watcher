@@ -5,6 +5,8 @@ import com.keyman.watcher.netty.strategy.Strategy;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 public class TestStrategy implements Strategy {
     @Override
@@ -21,10 +23,11 @@ public class TestStrategy implements Strategy {
     }
 
     @Override
-    public BiConsumer<ChannelHandlerContext, Object> getClientHandler() {
+    public BiPredicate<ChannelHandlerContext, Object> getClientHandler() {
         return (ctx, obj) -> {
             ctx.writeAndFlush("client received");
             System.out.println(obj);
+            return true;
         };
     }
 }

@@ -2,7 +2,7 @@ package com.keyman.watcher.netty.client;
 
 
 import com.keyman.watcher.netty.ConnectCenter;
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import com.keyman.watcher.util.Retry;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,30 +11,30 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 @Sharable
 public class ClientInHandler extends ChannelInboundHandlerAdapter {
     private static final Logger log = LoggerFactory.getLogger(ClientInHandler.class);
-    private BiConsumer<ChannelHandlerContext, Object> dataHandler;
-    private Consumer<Void> serverDownHandler;
+    private BiPredicate<ChannelHandlerContext, Object> dataHandler;
+    private volatile boolean receivedOK = true;
 
-    public void setDataHandler(BiConsumer<ChannelHandlerContext,Object> dataHandler) {
+    public void setDataHandler(BiPredicate<ChannelHandlerContext, Object> dataHandler) {
         this.dataHandler = dataHandler;
     }
 
     public void setServerDownHandler(Consumer<Void> serverDownHandler) {
-        this.serverDownHandler = serverDownHandler;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        Optional.ofNullable(dataHandler).ifPresent(handler -> handler.accept(ctx, msg));
+        Optional.ofNullable(dataHandler).ifPresent(handler -> receivedOK = handler.test(ctx, msg));
     }
 
     @Override
@@ -47,7 +47,7 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-            if (event.state().equals(IdleState.READER_IDLE) && GlobalStore.getLatestMoreMapSent()) { // long time not receive
+            if (event.state().equals(IdleState.READER_IDLE) && GlobalStore.getLatestMoreMapSent() && !receivedOK) { // long time not receive
                 ctx.writeAndFlush(GlobalStore.getLatestMoreMapForByte());
                 log.info("no receive message after sending copy data, resend the copy data");
             }
@@ -78,6 +78,10 @@ public class ClientInHandler extends ChannelInboundHandlerAdapter {
     // channel be active
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        log.info("channel connected");
+        InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
+        if (address != null) {
+            log.info("channel connected: {}", address.getAddress());
+        }
+
     }
 }

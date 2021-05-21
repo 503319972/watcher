@@ -4,6 +4,8 @@ import com.keyman.watcher.netty.client.Client;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 public class LeaderCopyStrategy implements Strategy {
     @Override
@@ -17,7 +19,7 @@ public class LeaderCopyStrategy implements Strategy {
     }
 
     @Override
-    public BiConsumer<ChannelHandlerContext, Object> getClientHandler() {
+    public BiPredicate<ChannelHandlerContext, Object> getClientHandler() {
         return null;
     }
 }

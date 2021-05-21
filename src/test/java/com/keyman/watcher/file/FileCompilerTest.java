@@ -2,7 +2,7 @@ package com.keyman.watcher.file;
 
 import com.keyman.watcher.controller.Temp;
 import com.keyman.watcher.file.compilation.FileCompiler;
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class FileCompilerTest {
         String rootPath = "C:\\Users\\khong\\Desktop\\api\\TS\\New folder\\New folder";
         FilePathHierarchyParser parser = new FilePathHierarchyParser(rootPath);
         Map<String, String> stringStringMap = parser.buildHierarchy();
-        GlobalStore.putGlobalResult(stringStringMap);
+        GlobalStore.putGlobalResult(Collections.singletonMap(rootPath, stringStringMap));
         new FileCompiler().compile(stringStringMap, rootPath, Temp.class, "CompiledController");
 
         Class<?> aClass = Class.forName("com.keyman.watcher.controller.CompiledController");

@@ -35,7 +35,6 @@ public class Server {
     private final Integer port;
     private final LengthFieldPrepender lengthFieldPrepender = new LengthFieldPrepender(2);
     private final StringEncoder stringEncoder = new StringEncoder();
-    private final ByteArrayDecoder byteArrayDecoder = new ByteArrayDecoder();
 
     private final ChannelInitializer<SocketChannel> channelInitializer = new ChannelInitializer<SocketChannel>() {
         @Override
@@ -45,7 +44,7 @@ public class Server {
                     , 0, 2, 0, 2));
             pipeline.addLast(lengthFieldPrepender);
             pipeline.addLast(stringEncoder);
-            pipeline.addLast(byteArrayDecoder);
+            pipeline.addLast(new ByteArrayDecoder());
             pipeline.addLast(channelHandler);
         }
     };

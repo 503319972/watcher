@@ -28,6 +28,11 @@ public class NettyConfig {
         this.hosts = hosts;
     }
 
+    public NettyConfig(Integer port, List<String> hosts) {
+        this.port = port;
+        this.hosts = hosts;
+    }
+
     public List<String> getHosts() {
         return hosts;
     }

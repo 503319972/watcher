@@ -3,10 +3,11 @@ package com.keyman.watcher.configuration;
 
 import com.keyman.watcher.file.FilePathHierarchyParser;
 import com.keyman.watcher.netty.ConnectCenter;
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -23,37 +24,50 @@ public class FileDirectoryListener {
     private final FileMapConfiguration configuration;
     private final boolean clusterCopy;
 
-    public FileDirectoryListener(FileMapConfiguration configuration,
-                                 String rootPath,
-                                 boolean clusterCopy) {
-        this.rootPath = rootPath;
+    public FileDirectoryListener(FileMapConfiguration configuration) {
+        this.rootPath = configuration.getFilePath();
         this.configuration = configuration;
         this.executor = new ScheduledThreadPoolExecutor(2);
-        this.clusterCopy = clusterCopy;
+        this.clusterCopy = configuration.isClusterCopy();
     }
 
     public void listen() {
         FilePathHierarchyParser hierarchyParser = new FilePathHierarchyParser(rootPath);
         executor.scheduleWithFixedDelay(() -> {
-            AtomicBoolean changed = new AtomicBoolean(false);
-            Map<String, Object> globalResult = GlobalStore.getGlobalResultCopy();
-            Map<String, ?> fileMap = configuration.isCompacted() ?
+            Map<String, Object> globalResult = GlobalStore.getLocalGlobalResult();
+            boolean compacted = configuration.isCompacted();
+            Map<String, ?> fileMap = compacted ?
                     hierarchyParser.buildHierarchy(true) : hierarchyParser.buildHierarchy();
             Set<String> files = fileMap.keySet();
             Set<String> oldFiles = globalResult.keySet();
             HashMap<String, Object> newMap = new HashMap<>();
-            files.stream().filter(file -> !oldFiles.contains(file)).forEach(file -> {
-                newMap.put(file, fileMap.get(file));
-                changed.set(true);
+            files.forEach(file -> {
+                if(!oldFiles.contains(file)) {
+                    newMap.put(file, fileMap.get(file));
+                } else {
+                    Object targetValue = fileMap.get(file);
+                    Object curValue = globalResult.get(file);
+                    if (compacted) {
+                        if (!Arrays.equals((byte[]) targetValue, (byte[]) curValue)) {
+                            newMap.put(file, targetValue);
+                        }
+                    } else {
+                        if (!targetValue.equals(curValue)) {
+                            newMap.put(file, targetValue);
+                        }
+                    }
+                }
             });
-            if (changed.get()) {
+            if (newMap.size() > 0) {
                 GlobalStore.putGlobalResult(newMap);
                 //configuration.compile(2); //need to compile after a while
                 if (clusterCopy) {
-                    GlobalStore.setLatestMap(newMap);
+                    GlobalStore.setLatestMap(newMap, false);
                     ConnectCenter center = ConnectCenter.getInstance();
                     center.distributeCopy();
                     GlobalStore.setLatestMoreMapSent();
+                } else {
+                    GlobalStore.setFileMapChanged(true);
                 }
             }
         }, 0, 5000, TimeUnit.MILLISECONDS);
@@ -63,8 +77,10 @@ public class FileDirectoryListener {
             Long latestTime = GlobalStore.getLatestTime();
             Optional.ofNullable(latestTime).ifPresent(last -> {
                 long now = System.currentTimeMillis();
-                if (now - last >= 6000) {
-                    configuration.compile(2);
+                if (now - last >= 6000 && GlobalStore.isFileMapChanged()) {
+                    log.info("file map changed ---------------------------------");
+                    configuration.compile(2, false);
+                    GlobalStore.setFileMapChanged(false);
                 }
             });
         }, 0, 5000, TimeUnit.MILLISECONDS);

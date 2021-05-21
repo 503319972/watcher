@@ -1,12 +1,15 @@
 package com.keyman.watcher.file;
 
 import com.keyman.watcher.exception.UnknownResultFormatException;
+import com.keyman.watcher.netty.client.Client;
 import com.keyman.watcher.parser.ExcelFileParser;
 import com.keyman.watcher.parser.FileResultParser;
 import com.keyman.watcher.parser.ResultFormat;
 import com.keyman.watcher.parser.TextFileParser;
 import com.keyman.watcher.util.GZIPUtil;
 import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Arrays;
@@ -21,7 +24,7 @@ import static com.keyman.watcher.parser.ResultFormat.TXT;
 
 
 public class FilePathHierarchyParser {
-
+    private static final Logger log = LoggerFactory.getLogger(FilePathHierarchyParser.class);
     private final Map<String, String> hierarchy = new HashMap<>();
     private final Map<String, byte[]> compactedHierarchy = new HashMap<>();
     private final String rootPath;
@@ -32,14 +35,20 @@ public class FilePathHierarchyParser {
 
     public Map<String, String> buildHierarchy() {
         File top = new File(rootPath);
-        if (!top.exists() || !top.isDirectory()) return null;
+        if (!top.exists() || !top.isDirectory()) {
+            log.error("file path: {} is not a directory", rootPath);
+            return null;
+        }
         goThroughPath(rootPath, false);
         return hierarchy;
     }
 
     public Map<String, byte[]> buildHierarchy(boolean compact) {
         File top = new File(rootPath);
-        if (!top.exists() || !top.isDirectory()) return null;
+        if (!top.exists() || !top.isDirectory()) {
+            log.error("file path: {} is not a directory", rootPath);
+            return null;
+        }
         goThroughPath(rootPath, compact);
         return compactedHierarchy;
     }
@@ -56,10 +65,18 @@ public class FilePathHierarchyParser {
                 String[] blocks = p.split("\\.");
                 FileResultParser parser = chooseFileParser(blocks[blocks.length - 1]);
                 Optional.ofNullable(parser).ifPresent(e -> {
+                    String fileKey = file.getPath().replace(rootPath, "");
+                    fileKey = fileKey.substring(0, fileKey.lastIndexOf('.')).
+                            replaceAll("\\s", "");
+                    if (fileKey.startsWith("\\")) {
+                        fileKey = fileKey.substring(1).replace("\\", "/");
+                    } else if(fileKey.startsWith("/")) {
+                        fileKey = fileKey.substring(1);
+                    }
                     if (compact) {
-                        compactedHierarchy.put(file.getPath(), GZIPUtil.compress(parser.parse(file)));
+                        compactedHierarchy.put(fileKey, GZIPUtil.compress(parser.parse(file)));
                     } else
-                        hierarchy.put(file.getPath(), parser.parse(file));
+                        hierarchy.put(fileKey, parser.parse(file));
                 });
             }
         });
@@ -78,7 +95,7 @@ public class FilePathHierarchyParser {
             case EXCEL2:
                 return new ExcelFileParser(EXCEL2);
             default:
-                throw new UnknownResultFormatException();
+                return null;
         }
     }
 

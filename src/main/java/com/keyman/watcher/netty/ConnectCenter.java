@@ -3,7 +3,7 @@ package com.keyman.watcher.netty;
 import com.keyman.watcher.netty.client.Client;
 import com.keyman.watcher.netty.server.Server;
 import com.keyman.watcher.netty.strategy.Strategy;
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import com.keyman.watcher.util.Retry;
 
 import java.util.List;
@@ -42,6 +42,19 @@ public class ConnectCenter {
         client = new Client(hosts);
         Optional.ofNullable(strategy).ifPresent(s -> client.setHandler(s.getClientHandler()));
         pool.execute(client::start);
+    }
+
+    public void startClient(NettyConfig config){
+        startClient(config, null);
+    }
+
+    public void startClient(NettyConfig config, Consumer<Void> handler){
+        client = new Client(config);
+        Optional.ofNullable(strategy).ifPresent(s -> client.setHandler(s.getClientHandler()));
+        pool.execute(() -> {
+            client.start();
+            Optional.ofNullable(handler).ifPresent(h -> h.accept(null));
+        });
     }
 
     public void closeClient(){

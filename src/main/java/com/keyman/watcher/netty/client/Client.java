@@ -1,6 +1,7 @@
 package com.keyman.watcher.netty.client;
 
 import com.keyman.watcher.exception.NettyException;
+import com.keyman.watcher.global.GlobalStore;
 import com.keyman.watcher.netty.NettyConfig;
 import com.keyman.watcher.util.Retry;
 import io.netty.bootstrap.Bootstrap;
@@ -17,12 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 public class Client {
@@ -74,7 +77,7 @@ public class Client {
         this(new NettyConfig(hosts));
     }
 
-    public void setHandler(BiConsumer<ChannelHandlerContext,Object> dataHandler){
+    public void setHandler(BiPredicate<ChannelHandlerContext, Object> dataHandler){
         clientInitializer.setDataHandler(dataHandler);
     }
 
@@ -84,25 +87,20 @@ public class Client {
 
     public void toStart() {
         flush();
-        List<Retry> retries = new ArrayList<>();
         config.getHosts().forEach(ip -> {
-            String[] ipPort = ip.split(":");
-            bootstrap.remoteAddress(ipPort.length > 1 ? ipPort[0] : ip, ipPort.length > 1 ?
-                    Integer.parseInt(ipPort[1]) : config.getPort());
-
-            Retry retry = Retry.retryAsync(() -> {
-                ChannelFuture future = bootstrap.connect().sync();
-                connectedChannelsMap.put(ip, future.channel());
-            });
-            retries.add(retry);
-//            try {
-//                ChannelFuture future = bootstrap.connect().sync();
-//                connectedChannelsMap.put(ip, future.channel());
-//            } catch (Exception e) {
-//                throw new NettyException("init channel error", e);
-//            }
+            if (!ip.equals(GlobalStore.getLocalHost()) &&
+                    !ip.equals(GlobalStore.getHost())){
+                ChannelFuture connect = connect(ip);
+                Channel channel = connect.channel();
+                connectedChannelsMap.put(ip, channel);
+                if (!channel.isActive()) {
+                    Retry.retryAsync(() -> {
+                        ChannelFuture future = connect(ip).sync();
+                        connectedChannelsMap.put(ip, future.channel());
+                    }, 5, 5000).waitForFinish();
+                }
+            }
         });
-        retries.forEach(retry -> retry.waitForFinish());
         start = true;
     }
 
@@ -131,14 +129,11 @@ public class Client {
 
     public void sendMsg(@NotNull String ip, byte[] msg) {
         Channel channel = connectedChannelsMap.get(ip);
-        if (channel == null) {
-            throw new NettyException("have not build connect to "  + ip + " yet");
-        }
-        if (!channel.isActive()) {
-            reconnect(ip);
-        }
         try {
-            if (channel.isActive()) {
+            if (!channel.isActive()) {
+                reconnect(ip);
+            }
+            else {
                 InetSocketAddress ipSocket = (InetSocketAddress) channel.remoteAddress();
                 String host = ipSocket.getHostString();
                 int curPort = ipSocket.getPort();
@@ -148,7 +143,7 @@ public class Client {
                 log.info("send data to {}:{}", host , curPort);
             }
         } catch (Exception e) {
-            log.error("send data fail", e);
+            log.error("send data fail, {}", e.getMessage());
         }
     }
 
@@ -159,7 +154,7 @@ public class Client {
         Channel newChannel;
         InetSocketAddress ipSocket;
         try {
-            newChannel = bootstrap.connect(ip, config.getPort()).sync().channel();
+            newChannel = connect(ip).sync().channel();
             ipSocket = (InetSocketAddress) newChannel.remoteAddress();
         } catch (Exception e) {
             throw new NettyException("cannot connect to channel " + ip);
@@ -167,5 +162,11 @@ public class Client {
         String host = ipSocket.getHostString();
         log.info("reconnect channel: {}", host);
         connectedChannelsMap.put(ip, newChannel);
+    }
+
+    private ChannelFuture connect(String host){
+        String[] ipPort = host.split(":");
+        return bootstrap.connect(ipPort.length > 1 ? ipPort[0] : host, ipPort.length > 1 ?
+                Integer.parseInt(ipPort[1]) : config.getPort());
     }
 }

@@ -1,11 +1,14 @@
 package com.keyman.watcher.file;
 
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import com.keyman.watcher.util.FileUtil;
+import com.keyman.watcher.util.GZIPUtil;
+import com.keyman.watcher.util.JsonUtil;
 import com.keyman.watcher.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,23 +20,17 @@ public class FileTemplate {
     private FileTemplate() {
     }
 
-    public static String buildController(String rootPath, String packageName, String className) {
+    public static String buildController(String packageName, String className) {
         StringBuilder builder = new StringBuilder();
         AtomicInteger index = new AtomicInteger(1);
-        Map<String, ?> input = GlobalStore.getGlobalResultCopy();
-        log.debug("root path: {}", rootPath);
-        if (rootPath.endsWith("/") || rootPath.endsWith("\\")) {
-            rootPath = rootPath.substring(0, rootPath.length() - 1);
-        }
-        String finalRootPath = rootPath;
-        input.keySet().forEach(k -> {
-            log.debug("cur path: {}", k);
-            String url = k.substring(finalRootPath.length() + 1, k.lastIndexOf('.')).replaceAll("\\s", "");
-            String tempMethod = METHOD_FILE.replace("{{methodUrl}}", url.replace("\\", "/"));
+        Map<String, Map<String, Object>> input = GlobalStore.getGlobalResultCopy();
+
+        // fileKey: (ip, value)
+        input.forEach((fileKey, v) -> {
+            log.debug("cur path: {}", fileKey);
+            String tempMethod = METHOD_FILE.replace("{{methodUrl}}", fileKey);
             tempMethod = tempMethod.replace("{{methodName}}", "get" + index.getAndIncrement());
-            String methodReturn = input.values().stream().findAny().orElse(null) instanceof byte[] ?
-                    "GZIPUtil.decompress((byte[]) GlobalStore.getGlobalResult().get(\"" + StringUtil.escapeRegex(k) + "\"));" :
-                    "GlobalStore.getGlobalResult().get(\"" + StringUtil.escapeRegex(k) + "\");";
+            String methodReturn = "handleResult(\"" + fileKey + "\");";
             tempMethod = tempMethod.replace("{{methodReturn}}", methodReturn);
             builder.append(tempMethod);
         });

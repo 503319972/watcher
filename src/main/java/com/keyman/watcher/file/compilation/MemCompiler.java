@@ -1,7 +1,7 @@
 package com.keyman.watcher.file.compilation;
 
 import com.keyman.watcher.file.jar.JarHandler;
-import com.keyman.watcher.parser.GlobalStore;
+import com.keyman.watcher.global.GlobalStore;
 import com.keyman.watcher.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +18,13 @@ import java.util.List;
 
 public class MemCompiler {
     private static final Logger log = LoggerFactory.getLogger(MemCompiler.class);
+    private static final List<String> optionLibs = new ArrayList<>();
     private final JarHandler jarHandler;
 
     public MemCompiler(JarHandler jarHandler) {
         this.jarHandler = jarHandler;
     }
-    public Class<?> compile(String content, String packageName, String targetClassName)
+    public Class<?> compile(String content, String packageName, String targetClassName, boolean init)
     {
         try {
             log.info("class content: {}", content);
@@ -35,10 +36,11 @@ public class MemCompiler {
 
             DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
 
-            List<String> options = new ArrayList<>();
-            handleJar(options);
+            if (init) {
+                handleJar();
+            }
             JavaCompiler.CompilationTask task = compiler.getTask(null, controllerFileManager, diagnosticCollector,
-                    options, null, Collections.singletonList(stringObject));
+                    optionLibs, null, Collections.singletonList(stringObject));
             if (Boolean.TRUE.equals(task.call())) {
                 ControllerFileObject controllerFileObject = controllerFileManager.getControllerFileObject();
                 ClassLoader classLoader = new ControllerClassLoader(controllerFileObject, targetClassName);
@@ -59,11 +61,11 @@ public class MemCompiler {
         return null;
     }
 
-    private void handleJar(List<String> options) {
+    private void handleJar() {
         if (GlobalStore.getJarBoot()) {
             String libs = jarHandler.getLibsInJar();
-            options.add("-classpath");
-            options.add(libs);
+            optionLibs.add("-classpath");
+            optionLibs.add(libs);
         }
     }
 

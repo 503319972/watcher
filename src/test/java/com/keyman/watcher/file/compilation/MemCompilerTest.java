@@ -15,9 +15,9 @@ public class MemCompilerTest {
     @Ignore("ignore maven build")
     public void compileTest() {
         MemCompiler memCompiler = new MemCompiler(new JarHandler());
-        String content = FileTemplate.buildController("", Temp.class.getPackage().getName(), "CompiledController");
+        String content = FileTemplate.buildController(Temp.class.getPackage().getName(), "CompiledController");
         Class<?> compiledController = memCompiler.compile(content,
-                Temp.class.getPackage().getName(), "CompiledController");
+                Temp.class.getPackage().getName(), "CompiledController", false);
         Method[] methods = compiledController.getMethods();
         Assert.assertNotNull(methods);
     }

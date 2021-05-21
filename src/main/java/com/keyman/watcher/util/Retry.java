@@ -53,7 +53,7 @@ public class Retry {
                 try {
                     handler.handle();
                 } catch (Exception e) {
-                    log.warn("handler execute failed. Try time: {}", timeHolder.times.get(), e);
+                    log.error("handler execute failed. Try time: {}, {}", timeHolder.times.get(), e.getMessage());
                     timeHolder.tryAgain(period, timeUnit);
                     continue;
                 }

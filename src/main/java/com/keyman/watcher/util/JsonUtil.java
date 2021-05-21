@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Map;
 
 public class JsonUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonUtil.class);
@@ -141,6 +142,24 @@ public class JsonUtil {
     public static <C> C fromJson(String json, TypeReference<C> typeReference){
         try {
             return OBJECT_MAPPER.readValue(json, typeReference);
+        } catch (IOException e) {
+            LOGGER.error(TO_JSON_ERROR, e);
+        }
+        return null;
+    }
+
+    public static <K, V> Map<K, V> fromJsonToMap(String json){
+        try {
+            return OBJECT_MAPPER.readValue(json, new TypeReference<Map<K,V>>(){});
+        } catch (IOException e) {
+            LOGGER.error(TO_JSON_ERROR, e);
+        }
+        return null;
+    }
+
+    public static <K, V> Map<K, V> fromJsonToMap(byte[] json){
+        try {
+            return OBJECT_MAPPER.readValue(json, new TypeReference<Map<K,V>>(){});
         } catch (IOException e) {
             LOGGER.error(TO_JSON_ERROR, e);
         }

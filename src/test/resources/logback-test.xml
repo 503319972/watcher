@@ -16,7 +16,7 @@
 		<maxFlushTime>5000</maxFlushTime>
 		<appender-ref ref="console" />
 	</appender>
-	<logger name="org.apache.kafka" additivity="false" level="INFO">
+	<logger name="io.netty" additivity="false" level="INFO">
 		<appender-ref ref="netty" />
 	</logger>
 

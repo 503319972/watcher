@@ -22,7 +22,7 @@ public class FileUtil {
             StringBuilder stringBuilder = new StringBuilder();
             String line;
             while ((line = in.readLine()) != null) {
-                stringBuilder.append(line);
+                stringBuilder.append(line).append("\r\n");
             }
             return stringBuilder.toString();
         } catch (Exception e) {
