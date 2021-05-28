@@ -16,9 +16,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
 public class ConnectCenterTest {
@@ -170,5 +177,65 @@ public class ConnectCenterTest {
         });
     }
 
+    @Test
+    public void concurrent2() {
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(3, 3, 1, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1));
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, executor);
 
+        CompletableFuture<Void> future2 = CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, executor);
+        CompletableFuture<Void> future3 = CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(1200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, executor);
+
+        future.thenAcceptBothAsync(future2, (voi1, voi2) -> {
+            System.out.println("finish");
+                }, executor).thenApplyAsync(voi -> {
+            System.out.println("finish2");
+            return null;
+        }, executor);
+
+
+
+        while (true) {}
+    }
+
+    @Test
+    public void concurrent3() {
+        ScheduledThreadPoolExecutor pool = new ScheduledThreadPoolExecutor(2);
+        pool.scheduleWithFixedDelay(() -> {
+            System.out.println("come1");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+
+        ScheduledThreadPoolExecutor pool2 = new ScheduledThreadPoolExecutor(2);
+        pool2.scheduleAtFixedRate(() -> {
+            System.out.println("come2");
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+        while (true) {}
+    }
 }

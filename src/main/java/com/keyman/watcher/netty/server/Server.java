@@ -53,7 +53,7 @@ public class Server {
 
     public Server(NettyConfig nettyConfig, BiConsumer<ChannelHandlerContext, Object> react) {
         this.port = nettyConfig.getPort();
-        this.channelHandler = new ServerInHandler(react);
+        this.channelHandler = new ServerInHandler(react, nettyConfig.getHosts());
     }
 
     public void setReact(Consumer<ChannelHandlerContext> react) {

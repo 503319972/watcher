@@ -18,9 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,20 +85,20 @@ public class Client {
 
     public void toStart() {
         flush();
+        ArrayList<Retry> retries = new ArrayList<>();
         config.getHosts().forEach(ip -> {
             if (!ip.equals(GlobalStore.getLocalHost()) &&
                     !ip.equals(GlobalStore.getHost())){
-                ChannelFuture connect = connect(ip);
-                Channel channel = connect.channel();
-                connectedChannelsMap.put(ip, channel);
-                if (!channel.isActive()) {
-                    Retry.retryAsync(() -> {
-                        ChannelFuture future = connect(ip).sync();
-                        connectedChannelsMap.put(ip, future.channel());
-                    }, 5, 5000).waitForFinish();
-                }
+                Retry retry = Retry.retryAsync(() -> {
+                    ChannelFuture connect = connect(ip);
+                    Channel channel = connect.channel();
+                    connectedChannelsMap.put(ip, channel);
+                    connect.sync();
+                }, 5, 5000);
+                retries.add(retry);
             }
         });
+        retries.forEach(retry -> retry.waitForFinish(false));
         start = true;
     }
 
@@ -145,6 +143,12 @@ public class Client {
         } catch (Exception e) {
             log.error("send data fail, {}", e.getMessage());
         }
+    }
+
+    public void newConnect(String host) {
+        ChannelFuture connect = connect(host);
+        Channel channel = connect.channel();
+        connectedChannelsMap.put(host, channel);
     }
 
     public void reconnect(String ip) {

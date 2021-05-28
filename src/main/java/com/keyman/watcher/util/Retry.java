@@ -81,7 +81,11 @@ public class Retry {
     }
 
     public void waitForFinish() {
-        this.holder.waitForFinish();
+        this.holder.waitForFinish(false);
+    }
+
+    public void waitForFinish(boolean wait) {
+        this.holder.waitForFinish(wait);
     }
 
 
@@ -114,9 +118,14 @@ public class Retry {
             finished.compareAndSet(false, true);
         }
 
-        public void waitForFinish() {
-            if (!isFinish())
-                LockSupport.park();
+        public void waitForFinish(boolean wait) {
+            if (!isFinish()) {
+                if (wait)
+                    LockSupport.park();
+                else {
+                    while (true) { if (isFinish()) break;}
+                }
+            }
         }
     }
 }

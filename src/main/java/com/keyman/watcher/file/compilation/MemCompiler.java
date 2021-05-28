@@ -27,7 +27,7 @@ public class MemCompiler {
     public Class<?> compile(String content, String packageName, String targetClassName, boolean init)
     {
         try {
-            log.info("class content: {}", content);
+            log.debug("class content: {}", content);
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager standardFileManager = compiler.getStandardFileManager(null, null, null);
             ControllerFileManager controllerFileManager = new ControllerFileManager(standardFileManager);
